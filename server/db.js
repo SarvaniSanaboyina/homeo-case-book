@@ -40,7 +40,8 @@ export function getPool() {
     pool = new pg.Pool({
       connectionString: config.databaseUrl,
       ssl: config.databaseSsl ? { rejectUnauthorized: true } : false,
-      max: 8,
+      max: process.env.VERCEL ? 1 : 8,
+      idleTimeoutMillis: process.env.VERCEL ? 10000 : 30000,
       connectionTimeoutMillis: 15000,
     })
   }
