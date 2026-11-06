@@ -88,7 +88,7 @@ export function deletePatient(id) {
 }
 
 export function createCaseSheet(input) {
-  return after(`/patients/${input.patientId}/cases`, { method: 'POST', body: input })
+  return after('/cases', { method: 'POST', body: input })
 }
 
 export function updateCaseSheet(id, input) {
@@ -100,7 +100,7 @@ export function deleteCaseSheet(id) {
 }
 
 export function createPrescription(input) {
-  return after(`/patients/${input.patientId}/prescriptions`, { method: 'POST', body: input })
+  return after('/prescriptions', { method: 'POST', body: input })
 }
 
 export function updatePrescription(id, input) {
@@ -112,7 +112,7 @@ export function deletePrescription(id) {
 }
 
 export function createFollowUp(input) {
-  return after(`/patients/${input.patientId}/follow-ups`, { method: 'POST', body: input })
+  return after('/follow-ups', { method: 'POST', body: input })
 }
 
 export function updateFollowUp(id, input) {

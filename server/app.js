@@ -37,6 +37,18 @@ function allowOrigin(origin) {
 
 const app = express()
 app.use(cors({ origin: (origin, callback) => callback(null, allowOrigin(origin)) }))
+app.use((req, _res, next) => {
+  const currentPath = (req.url || '').split('?')[0]
+  if (currentPath !== '/api' && currentPath !== '/api/') return next()
+  const forwarded = req.headers['x-forwarded-uri']
+  if (typeof forwarded !== 'string') return next()
+  const raw = forwarded.startsWith('http')
+    ? `${new URL(forwarded).pathname}${new URL(forwarded).search}`
+    : forwarded
+  const path = raw.split('?')[0]
+  if (path.startsWith('/api/') && path.length > 5) req.url = raw
+  next()
+})
 app.use(express.json({ limit: '8mb' }))
 
 function asyncRoute(handler) {
@@ -84,6 +96,10 @@ app.delete('/api/patients/:id', asyncRoute(async (req, res) => {
   res.status(204).end()
 }))
 
+app.post('/api/cases', asyncRoute(async (req, res) => {
+  res.status(201).json(await createCaseSheet(req.body))
+}))
+
 app.post('/api/patients/:patientId/cases', asyncRoute(async (req, res) => {
   res.status(201).json(await createCaseSheet({ ...req.body, patientId: req.params.patientId }))
 }))
@@ -95,6 +111,10 @@ app.patch('/api/cases/:id', asyncRoute(async (req, res) => {
 app.delete('/api/cases/:id', asyncRoute(async (req, res) => {
   await deleteCaseSheet(req.params.id)
   res.status(204).end()
+}))
+
+app.post('/api/prescriptions', asyncRoute(async (req, res) => {
+  res.status(201).json(await createPrescription(req.body))
 }))
 
 app.post('/api/patients/:patientId/prescriptions', asyncRoute(async (req, res) => {
@@ -110,6 +130,10 @@ app.delete('/api/prescriptions/:id', asyncRoute(async (req, res) => {
   res.status(204).end()
 }))
 
+app.post('/api/follow-ups', asyncRoute(async (req, res) => {
+  res.status(201).json(await createFollowUp(req.body))
+}))
+
 app.post('/api/patients/:patientId/follow-ups', asyncRoute(async (req, res) => {
   res.status(201).json(await createFollowUp({ ...req.body, patientId: req.params.patientId }))
 }))
@@ -122,6 +146,10 @@ app.delete('/api/follow-ups/:id', asyncRoute(async (req, res) => {
   await deleteFollowUp(req.params.id)
   res.status(204).end()
 }))
+
+app.use((req, res) => {
+  res.status(404).json({ error: `No route for ${req.method} ${req.path}.` })
+})
 
 app.use((error, _req, res, _next) => {
   const status = error.status || 500
